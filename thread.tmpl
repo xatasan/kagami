@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <title>
+      {{ if .F.Subject}} {{ .F.Subject}} {{ else}} {{ genTitle .F.Comment }}{{ end }} -
+      {{ with .N }}{{ . }}{{ else }}鏡 for /{{ .B }}/{{ end }}
+    </title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="icon" href="favicon.ico" />
+  </head>
+  <body>
+    <header>
+      <h1><a href=".." >
+	  {{ with .N }}{{ . }}{{ else }} Kagami for /{{ .B}}/{{ end}}
+      </a></h1>
+      <nav>
+	<a href="../catalog.html">Catalog</a> |
+	Search: (<a href="../sthreads.html">Threads</a>/
+	<a href="../sfiles.html">Files</a>) |
+	<a href="../about.html">About/FAQ</a> |
+	<a href="https://s.te.rs/~xat/kagami/source/">Source</a>
+      </nav>
+    </header>
+    <div class="post head" id="{{ .F.PostNumber }}">
+      {{ block "post" .F }}
+      <header>
+	{{ with .Subject }}<span class="subject">{{ . }}</span>{{ end}}
+	<span class="name">{{ .Name }}</span>
+	{{ with .Capcode}}<span class="capcode" >##{{ . }}</span>{{ end }}
+	<time>{{ .Time.Format "2006/01/_2 (Mon) 15:04:05"}}</time>
+	<a class="ref" href="#{{ .PostNumber }}">No.</a> {{ .PostNumber }}
+	{{ with .Quoted -}}
+	<ul class="quoted">
+	  {{ range . -}}
+	  <li><a class="r" href="#{{ . }}">&gt;&gt;{{ . }}</a></li>
+	  {{- end}}
+	</ul>
+	{{- end }}
+      </header>
+
+      <aside class="atts" >
+	{{ $multifile := gt (len .Files) 1 }}
+	{{ range .Files }}
+	<aside class="att {{ if $multifile }}multi{{ end }}"
+	       {{- if $multifile -}}
+	       style="max-width: {{ add .ThumbnailWidth 20 }}px;"
+	       {{- end }}>
+	  {{ if .FileDeleted }}
+	  <p class="fileinfo">File: <span class="bg"><em>deleted</em></span></p>
+	  <a>
+	    <img src="../deleted.png" />
+	  </a>
+	  {{ else if .Spoiler }}
+	  <p class="fileinfo">
+	    File: <a href="../file/{{ .Filename }}">{{ shortenFile .Filename}}</a>
+	    ({{ byteSize .FileSize }},
+	    {{ .ImageWidth -}} x {{- .ImageHeight }},
+	    <a href="../file/{{ .Filename }}" download="{{ .OrigFilename }}">
+	      {{ .OrigFilename -}}
+	    </a>)
+	  </p>
+	  <a target="_blank" href="../file/{{ .Filename }}">
+	    <img src="../spoiler.png" />
+	  </a>
+	  {{ else }}
+	  <p class="fileinfo">
+	    File: <a href="../file/{{ .Filename }}">{{ shortenFile .Filename}}</a>
+	    ({{ byteSize .FileSize }},
+	    {{ .ImageWidth -}} x {{- .ImageHeight }},
+	    <a href="../file/{{ .Filename }}" download="{{ .OrigFilename }}">
+	      {{ .OrigFilename -}}
+	    </a>)
+	  </p>
+	  <a target="_blank" target="_blank" href="../file/{{ .Filename }}">
+	    {{ if .Thumbnail }}
+	    <img src="../tmb/{{ .Thumbnail }}" width="{{ .ThumbnailWidth }}" />
+	    {{ else }}
+	    <img src="../file.png" />
+	    {{ end }}
+	    
+	    
+	  </a>
+	  {{ end}}
+	</aside>
+	{{ end }}
+      </aside>
+      
+      <main>
+	{{.Comment}}
+      </main>
+      {{ end }}
+    </div>
+    {{ range .T }}
+    <div class="post resp" id="{{ .PostNumber }}">
+      {{ template "post" . }}
+    </div>
+    {{ end }}
+    <footer>
+      Generated {{ .U.Format "Mon Jan _2 15:04:05 2006" }}
+      with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a>
+    </footer>
+    <script src="../kagami.js"></script>
+  </body>
+</html>
+
+{{/* -*- Mode: Web; Engine: Go -*- */}}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+    <head>
+	<title>
+	    Catalog #{{ .P }} -
+	    {{ with .N }}{{ . }}{{ else }}鏡 for /{{ .B }}/{{ end }}
+	</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="../style.css" />
+	<link rel="icon" href="favicon.ico" />
+    </head>
+    <body>
+	<header>
+	    <h1><a href="." >
+		{{ with .N }}{{ . }}{{ else }} Kagami for /{{ .B}}/{{ end}}
+	    </a></h1>
+	    <nav>
+		<strong>Catalog {{.P}}/{{.A}}</strong> |
+		Search: (<a href="./sthreads.html">Threads</a>/<a href="./sfiles.html">Files</a>) |
+		<a href="../about.html">About/FAQ</a> |
+		<a href="https://s.te.rs/~xat/kagami/source/">Source</a>
+	    </nav>
+	</header>
+	<ul class="catalog" >
+	    {{ range .T }}
+	    <li title="No. {{ .PostNumber }}">
+		<a href="./res/{{ .PostNumber }}.html">
+		    {{ with (index .Files 0).Thumbnail }}
+		    <img src="./tmb/{{ . }}" />
+		    {{ else }}
+		    <img src="./file.png" />
+		    {{ end }}
+		    {{ if .Subject }}
+		    <span class="subject">{{ .Subject }}</span>
+		    {{ end }}
+		    {{ shortenStr .Comment }}
+		</a>
+	    </li>
+	    {{ end }}
+	</ul>    
+	<footer>
+	    <p id="nav">
+		{{ if gt .P 2 }}
+		<a href="./catalog-1.html" title="first">&lt;&lt;&lt;</a> |
+		<a href="./catalog-{{.Prev}}.html" title="previous" >&lt;</a>
+		{{ else if gt .P 1 }}
+		<a href="./catalog-1.html" title="previous">&lt;</a> 
+		{{ end }}
+		<strong>Page {{ .P }}/{{ .A }}</strong>
+		{{ if lt .Next .A }}
+		<a href="./catalog-{{.Next}}.html" title="next">&gt;</a> |
+		<a href="./catalog-{{.A}}.html" title="last">&gt;&gt;&gt;</a>
+		{{ else if lt .P .A }}
+		<a href="./catalog-{{.Next}}.html" title="next">&gt;</a>
+		{{ end }}
+	    </p>
+	    
+	    Generated {{ .U.Format "Mon Jan _2 15:04:05 2006" }}
+	    with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a>
+	</footer>
+    </body>
+</html>
+
+{{/* -*- Mode: Web; Engine: Go -*- */}}

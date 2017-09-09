@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>
+      Search files -
+      {{ with .N }}{{ . }}{{ else }}鏡 for /{{ .B }}/{{ end }}
+    </title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="icon" href="favicon.ico" />
+  </head>
+  <body>
+    <header>
+      <h1><a href="." >
+	  {{ with .N }}{{ . }}{{ else }} Kagami for /{{ .B}}/{{ end}}
+      </a></h1>
+      <nav>
+	<a href="./catalog.html">Catalog</a> |
+	Search: (<a href="./sthreads.tmpl">Threads</a>/<strong>Files</strong>) |
+	<a href="./about.html">About/FAQ</a> |
+	<a href="https://s.te.rs/~xat/kagami/source/">Source</a>
+      </nav>
+    </header>
+
+    <p>Not yet implemented...</p>
+
+    <footer>
+      Made with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a>
+    </footer>
+    <script src="../kagami.js"></script>
+  </body>
+</html>
+{{/* -*- Mode: Web; Engine: Go -*- */}}
