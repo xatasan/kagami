@@ -8,6 +8,7 @@
 	<meta charset="utf-8" />
 	<link rel="stylesheet" href="../style.css" />
 	<link rel="icon" href="favicon.ico" />
+	<meta name="viewport" content="initial-scale=1.0,width=device-width" />
     </head>
     <body>
 	<header>
@@ -16,9 +17,8 @@
 	    </a></h1>
 	    <nav>
 		<strong>Catalog {{.P}}/{{.A}}</strong> |
-		Search: (<a href="./sthreads.html">Threads</a>/<a href="./sfiles.html">Files</a>) |
-		<a href="../about.html">About/FAQ</a> |
-		<a href="https://s.te.rs/~xat/kagami/source/">Source</a>
+		Search: (<a href="./sthreads.html">Threads</a>/<a href=" ./sfiles.html">Files</a>) |
+		<a href="../about.html">About/FAQ</a>
 	    </nav>
 	</header>
 	<ul class="catalog" >
@@ -55,8 +55,8 @@
 		{{ end }}
 	    </p>
 	    
-	    Generated {{ .U.Format "Mon Jan _2 15:04:05 2006" }}
-	    with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a>
+	    <p>Generated {{ .U.Format "Mon Jan _2 15:04:05 2006" }}
+	    with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a></p>
 	</footer>
     </body>
 </html>

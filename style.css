@@ -20,7 +20,7 @@ a { color: #027; }
 
 /* HEADER & FOOTER */
 body>header, body>footer {
-    padding: 10px 40px;
+    padding: 6px;
     margin: 0;
     background: #447;
     color: #99d;
@@ -147,12 +147,18 @@ ul.catalog a {
     color: inherit;
 }
 
-@media (min-width: 800px) {
+@media (min-width: 500px) {
+    html { font-size: 1.2em; }
+    
     body>p,
     ul.catalog,
     div.post {
 	margin: 4px 40px;
 	max-width: calc(100%-80px);
+    }
+
+    body>header, body>footer {
+	padding: 10px 40px;
     }
 }
 
@@ -196,7 +202,5 @@ div.post main pre {
     min-height: 0.7em;
 }
 
-footer p#nav {
-    float: left;
-    margin: 0;
-}
+footer p#nav { float: left; }
+footer > p { margin: 0; }

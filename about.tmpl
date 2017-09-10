@@ -1,33 +1,34 @@
 <!doctype html>
 <html>
-  <head>
-    <title>
-      About -
-      {{ with .N }}{{ . }}{{ else }}鏡 for /{{ .B }}/{{ end }}
-    </title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="./style.css" />
-    <link rel="icon" href="favicon.ico" />
-  </head>
-  <body>
-    <header>
-      <h1><a href="." >
-	  {{ with .N }}{{ . }}{{ else }} Kagami for /{{ .B}}/{{ end}}
-      </a></h1>
-      <nav>
-	<a href="./catalog.html">Catalog</a> |
-	Search: (<a href="./sthreads.html">Threads</a>/<a href="./sfiles.html">Files</a>) |
-	<strong>About/FAQ</strong> |
-	<a href="https://s.te.rs/~xat/kagami/source/">Source</a>
-      </nav>
-    </header>
+    <head>
+	<title>
+	    About -
+	    {{ with .N }}{{ . }}{{ else }}鏡 for /{{ .B }}/{{ end }}
+	</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="./style.css" />
+	<link rel="icon" href="favicon.ico" />
+	<meta name="viewport" content="initial-scale=1.0,width=device-width" /> 
+    </head>
+    <body>
+	<header>
+	    <h1><a href="." >
+		{{ with .N }}{{ . }}{{ else }} Kagami for /{{ .B}}/{{ end}}
+	    </a></h1>
+	    <nav>
+		<a href="./catalog.html">Catalog</a> |
+		Search: (<a href="./sthreads.html">Threads</a>/<a href="./sfiles.html">Files</a>) |
+		<strong>About/FAQ</strong>
+	    </nav>
+	</header>
 
-    <p><em>about</em></p>
+	<p><em>about</em></p>
 
-    <footer>
-      Made with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a>
-    </footer>
-  </body>
+	<footer>
+	    Made with <a href="https://s.te.rs/~xat/kagami/">Kagami v0</a>
+	</footer>
+    </body>
 </html>
 
 {{/* -*- Mode: Web; Engine: Go -*- */}}
+
