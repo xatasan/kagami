@@ -122,7 +122,7 @@ func (b b_8chan) genThread(board, no string) (Thread, error) {
 		if post.Filename != "" {
 			files = append(files, File{
 				Filename:        post.Tim + post.Ext,
-				OrigFilename:    post.Filename,
+				OrigFilename:    post.Filename + post.Ext,
 				FileSize:        int(post.Fsize),
 				FileMD5:         post.Md5,
 				ImageWidth:      int(post.Width),
@@ -137,7 +137,7 @@ func (b b_8chan) genThread(board, no string) (Thread, error) {
 		for _, file := range post.ExtraFiles {
 			files = append(files, File{
 				Filename:        file.Tim + file.Ext,
-				OrigFilename:    file.Filename,
+				OrigFilename:    file.Filename + file.Ext,
 				FileSize:        int(file.Fsize),
 				FileMD5:         file.Md5,
 				ImageWidth:      int(file.Width),
