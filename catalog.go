@@ -14,16 +14,13 @@ const tpp = 200 // threads per page
 
 func mkCatalog(name, board string) error {
 	var (
-		index = "./catalog.html"
-		page  = "./catalog-%d.html"
-		opc   int // OP count
+		page = "./catalog-%d.html"
+		opc  int // OP count
 	)
 
 	db.QueryRow(`SELECT count(1) FROM posts WHERE op;`).Scan(&opc)
 	pages := int(math.Ceil(float64(opc) / tpp))
-	q, err := db.Prepare(
-		// q :=
-		`
+	q, err := db.Prepare(`
         SELECT posts.postno, posts.time, posts.name,
                posts.tripcode, posts.capcode,
                posts.subject, posts.comment, posts.country,
@@ -40,17 +37,9 @@ func mkCatalog(name, board string) error {
 	if err != nil {
 		return err
 	}
-	//               (SELECT count(1)
-	// FROM posts AS ref
-	// WHERE ref.replyto = posts.postno)
 
 	debugL("Creating %d catalog page(s) for %d threads", pages, opc)
-	// var wg sync.WaitGroup
-	// wg.Add(pages)
-	// for pg := 1; pg <= pages; pg++ {
 	for P := 1; P <= pages; P++ {
-		// go func(P int) {
-		// defer wg.Done()
 		file := fmt.Sprintf(page, P)
 		_, err := os.Stat(file)
 		if !os.IsNotExist(err) && P < pages {
@@ -119,9 +108,9 @@ func mkCatalog(name, board string) error {
 		m.Minify("text/html", f, pr)
 		f.Close()
 		verboseL("Wrote catalog page %d", P)
-		// }(pg)
 	}
-	os.Symlink(fmt.Sprintf(page, 1), index)
-	// wg.Wait()
+	if err := os.Link("catalog-1.html", "catalog.html"); err != nil && !os.IsExist(err) {
+		log.Fatalln(err)
+	}
 	return nil
 }

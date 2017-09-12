@@ -109,10 +109,24 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, f := range []string{"style.css", "kagami.js"} {
-		err := os.Symlink(path.Join(cwd, f), path.Join(r_dir, f))
-		if err != nil && !os.IsExist(err) {
-			log.Fatal(err)
+	for _, fn := range []string{"style.css", "kagami.js"} {
+		from := path.Join(cwd, fn)
+		to := path.Join(r_dir, fn)
+		if _, err := os.Stat(to); err != nil && !os.IsExist(err) {
+			f, err := os.Open(from)
+			if err != nil { // from
+				log.Fatal(err)
+			}
+			t, err := os.Create(to)
+			if err != nil { // to
+				log.Fatal(err)
+				f.Close()
+			}
+			if _, err := io.Copy(t, f); err != nil {
+				log.Fatal(err)
+			}
+			t.Close()
+			f.Close()
 		}
 	}
 
