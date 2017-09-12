@@ -2,22 +2,22 @@ package main
 
 import "fmt"
 
-type Engine interface {
-	getName() string
-	getHost() string
-	getFile(string) string
-	getTmb(string) string
-	getStatic(string, string) string
-	genThread(board, no string) (Thread, error)
-	getThreads(string, chan<- struct{ n, l float64 }) error
+type Engine struct {
+	name       string
+	host       string
+	getFile    func(string) string
+	getTmb     func(string) string
+	getStatic  func(string, string) string
+	genThread  func(string, string) (Thread, error)
+	getThreads func(string, chan<- struct{ n, l float64 }) error
 }
 
 func getEngine(host string) Engine {
 	switch host {
 	case "8ch", "8chan", "8ch.net":
-		return b_8chan{e_vichan: e_vichan{host: "8ch.net"}}
+		return b_8chan
 	default:
-		return e_vichan{host: host}
+		return newVichan(host)
 	}
 }
 

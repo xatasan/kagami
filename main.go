@@ -143,7 +143,7 @@ func main() {
 		board  = flag.Arg(1)
 		name   = flag.Arg(2)
 	)
-	verboseL("Using %q engine; board: /%s/\n", engine.getName(), board)
+	verboseL("Using %q engine; board: /%s/\n", engine.name, board)
 
 	for _, f := range []string{"spoiler.png", "deleted.png", "file.png"} {
 		if err := dl(f, engine.getStatic(board, f)); err != nil {
