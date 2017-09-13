@@ -81,7 +81,7 @@ func init() {
 	}
 
 	var database, r_dir string
-	flag.IntVar(&w_queues, "w", w_queues, "number of write queues")
+	flag.IntVar(&w_queues, "W", w_queues, "number of write queues")
 	flag.IntVar(&d_queues, "D", d_queues, "number of thread download queues")
 	flag.IntVar(&f_queues, "F", f_queues, "number of file download queues")
 	flag.StringVar(&database, "db", "kagami.db", "use file as sqlite database")
