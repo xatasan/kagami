@@ -1,6 +1,5 @@
 /* GENERAL STYLE */
 html, body {
-    background: #ddd;
     color: black;
     margin: 0;
     font-family: arial,helvetica,sans-serif;
@@ -11,27 +10,25 @@ span.bg {
     font-size: 0.8em;
 }
 span.heading {
-    color: #b11;
+    color: red;
     font-size: 1.2em;
     font-weight: bold;
 }
-
-a { color: #027; }
 
 /* HEADER & FOOTER */
 body>header, body>footer {
     padding: 6px;
     margin: 0;
-    background: #447;
-    color: #99d;
     font-size: 0.75em;
-    font-family: Consolas, Monaco, monospace, monospace;
     clear: both;
+    background: lightgray;
+    border: 0px gray solid;
 }
 
-body>footer { text-align: right; }
+body>header { border-bottom-width: 1px;  }
+body>footer { border-top-width: 1px; }
 body>header a, body>footer a {
-    color: #ccf;
+    color: blue;
     text-decoration: none;
 }
 
@@ -45,7 +42,7 @@ h1, h2, h3, h4 { margin: 0; }
 body>p,
 ul.catalog,
 div.post {
-    margin: 4px;
+    margin: 8px;
     padding: 6px;
     max-width: calc(100%-8px);
     display: table;
@@ -56,9 +53,9 @@ div.head {
     display: block;
 }
 
-div.resp {
-    background: #fff;
-    border: 0.5px silver outset;
+div.resp, ul.catalog li {
+    background: whitesmoke;
+    border: 1px silver solid;
     padding-left: 12px;
 }
 
@@ -70,9 +67,9 @@ div.post a.ref:hover { text-decoration: underline; }
 
 /* header and catalog */
 ul.catalog li span.subject,
-div.post header span.subject {color: #006;}
-div.post header span.name {color: #082;}
-div.post header span.capcode {color: #d00;}
+div.post header span.subject {color: navy;}
+div.post header span.name {color: green;}
+div.post header span.capcode {color: crimson;}
 div.post header a.ref {color: inherit;}
 div.post header span.name,
 ul.catalog li span.subject,
@@ -93,30 +90,21 @@ div.post header ul.quoted li {
 }
 
 div.resp:target {
-    background: #dde;
-}
-
-body.catalog time {
-    white-space: pre;
-    font-size: 0.8em;
-    font-family: Consolas, Monaco, monospace, monospace;
-    vertical-align: top;
+    background: lavender;
 }
 
 ul.catalog  {
     list-style: none;
-    text-align: center;
     font-size: 0.8em;
+    text-align: center;
 }
 
 ul.catalog li {
-    background: #fff;
-    margin: 2px;
     padding: 8px;
-    border: 0.2em #dde solid;
+    margin: 2px;
     display: inline-grid;
-    width: 10em;
-    height: 15em;
+    width: 150px;
+    height: 220px;
     overflow: hidden;
     vertical-align: top;
 }
@@ -124,8 +112,7 @@ ul.catalog li {
 ul.catalog li > a { width: 100%; }
 
 ul.catalog li:hover {
-    background: #dde;
-    border-color: #99d;
+    border-color: gray;
 }
 
 ul.catalog li img {
@@ -140,6 +127,13 @@ ul.catalog li img {
 ul.catalog span.subject {
     display: block;
     text-align: center;
+}
+
+ul.catalog p {
+    text-align: center;
+    max-width: 100%;
+    word-break: break-all;
+    margin: 4px auto;
 }
 
 ul.catalog a {
@@ -160,13 +154,17 @@ ul.catalog a {
     body>header, body>footer {
 	padding: 10px 40px;
     }
+
+    ul.catalog  {
+	text-align: left;
+    }
 }
 
-/* files */
-div.post aside.att {
-    font-size: 80%;
-    display: inline-table;
-}
+    /* files */
+    div.post aside.att {
+	font-size: 80%;
+	display: inline-table;
+    }
 
 div.post aside.att:not(.multi) {
     float: none;
@@ -193,14 +191,12 @@ div.post main {
     white-space: pre-wrap;
 }
 
-div.post main p.quote {color: #262;}
-div.post main p.rquote {color: #c26;}
-div.post main a { color: #02f; }
+div.post main p.quote {color: forestgreen;}
+div.post main p.rquote {color: plum;}
 div.post main p,
 div.post main pre {
     margin: 0;
     min-height: 0.7em;
 }
 
-footer p#nav { float: left; }
 footer > p { margin: 0; }
