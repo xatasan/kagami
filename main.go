@@ -30,18 +30,17 @@ var (
 
 	verbose = false
 	debug   = false
-	vlog    *log.Logger
 )
 
 func debugL(format string, v ...interface{}) {
 	if debug {
-		vlog.Printf(format, v...)
+		log.Printf(format, v...)
 	}
 }
 
 func verboseL(format string, v ...interface{}) {
 	if verbose {
-		vlog.Printf(format, v...)
+		log.Printf(format, v...)
 	}
 }
 
@@ -89,10 +88,6 @@ func init() {
 	flag.BoolVar(&verbose, "v", false, "output verbosely")
 	flag.BoolVar(&debug, "d", false, "output for debugging")
 	flag.Parse()
-
-	if verbose {
-		vlog = log.New(os.Stdout, "", log.LstdFlags)
-	}
 
 	for _, d := range []string{
 		r_dir,
