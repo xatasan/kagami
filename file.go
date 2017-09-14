@@ -20,6 +20,21 @@ func init() {
 	m.AddFunc("text/html", html.Minify)
 }
 
+func getFile(e Engine, file File) error {
+	local := fmt.Sprintf("%s/%s", i_dir, file.Filename)
+	remote := e.getFile(file.Filename)
+	return dl(local, remote)
+}
+
+func getThumbnail(e Engine, file File) error {
+	local := fmt.Sprintf("%s/%s", T_dir, file.Thumbnail)
+	remote := e.getTmb(file.Thumbnail)
+	if remote == "" {
+		return nil
+	}
+	return dl(local, remote)
+}
+
 func FDLqueue(dl <-chan File, e Engine, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for file := range dl {
