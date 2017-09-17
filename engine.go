@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type Engine struct {
 	name       string
 	host       string
