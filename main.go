@@ -27,6 +27,7 @@ var (
 	w_queues = 512 // writing queues
 	d_queues = 64  // thread download queues
 	f_queues = 12  // file download queues
+	tpp      = 200 // threads per page
 
 	verbose = false
 	debug   = false
@@ -83,6 +84,7 @@ func init() {
 	flag.IntVar(&w_queues, "W", w_queues, "number of write queues")
 	flag.IntVar(&d_queues, "D", d_queues, "number of thread download queues")
 	flag.IntVar(&f_queues, "F", f_queues, "number of file download queues")
+	flag.IntVar(&tpp, "t", tpp, "threads per catalog page")
 	flag.StringVar(&database, "db", "kagami.db", "use file as sqlite database")
 	flag.StringVar(&r_dir, "o", "out", "output directory")
 	flag.BoolVar(&verbose, "v", false, "output verbosely")

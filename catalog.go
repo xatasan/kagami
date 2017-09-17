@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const tpp = 200 // threads per page
-
 func mkCatalog(name, board string) error {
 	var (
 		page = "./catalog-%d.html"
@@ -19,7 +17,7 @@ func mkCatalog(name, board string) error {
 	)
 
 	db.QueryRow(`SELECT count(1) FROM posts WHERE op;`).Scan(&opc)
-	pages := int(math.Ceil(float64(opc) / tpp))
+	pages := int(math.Ceil(float64(opc) / float64(tpp)))
 	q, err := db.Prepare(`
         SELECT posts.postno, posts.time, posts.name,
                posts.tripcode, posts.capcode,
