@@ -72,7 +72,7 @@ func init() {
 	}
 	t = template.Must(template.New("").
 		Funcs(fm).
-		ParseGlob("./*.tmpl"))
+		ParseGlob("./tmpl/*.tmpl"))
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage: %s [options] [siteurl] [board] [name]?\n", os.Args[0])
