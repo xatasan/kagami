@@ -39,7 +39,7 @@
 	    <li title="No. {{ .PostNumber }}">
 		<a href="./res/{{ .PostNumber }}.html">
 		    {{ with (index .Files 0).Thumbnail }}
-		    <img src="./tmb/{{ . }}" />
+		    <img src="{{ getTmb . }}" />
 		    {{ else }}
 		    <img src="./file.png" />
 		    {{ end }}

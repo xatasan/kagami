@@ -42,14 +42,14 @@ type Post struct {
 	Files       []File
 }
 
-func processThread(e Engine, board string, t struct{ n, l float64 }) (Thread, error) {
+func processThread(board string, t struct{ n, l float64 }) (Thread, error) {
 	no := fmt.Sprintf("%d", int(t.n))
 	last_modified := time.Unix(int64(t.l), 0)
 
 	file, err := os.Open(t_dir + no + ".html")
 	defer file.Close()
 	if os.IsNotExist(err) {
-		return e.genThread(board, no)
+		return engine.genThread(board, no)
 	} else if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -61,7 +61,7 @@ func processThread(e Engine, board string, t struct{ n, l float64 }) (Thread, er
 		return nil, err
 
 	} else if stat.ModTime().Before(last_modified) {
-		return e.genThread(board, no)
+		return engine.genThread(board, no)
 	}
 
 	debugL("[pt/%05d] Thread %s already exits\n", getGID(), no)

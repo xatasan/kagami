@@ -3,9 +3,6 @@ package main
 import (
 	"io"
 	"path"
-	"strings"
-
-	"github.com/kennygrant/sanitize"
 
 	"flag"
 	"fmt"
@@ -22,7 +19,8 @@ const (
 )
 
 var (
-	t *template.Template
+	t      *template.Template
+	engine Engine
 
 	w_queues = 512 // writing queues
 	d_queues = 64  // thread download queues
@@ -89,6 +87,7 @@ func init() {
 	flag.StringVar(&r_dir, "o", "out", "output directory")
 	flag.BoolVar(&verbose, "v", false, "output verbosely")
 	flag.BoolVar(&debug, "d", false, "output for debugging")
+	flag.BoolVar(&rehost, "r", false, "download and rehost files and thumbnails")
 	flag.Parse()
 
 	for _, d := range []string{
@@ -143,6 +142,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	engine = getEngine(flag.Arg(0))
 	var (
 		towrite  = make(chan Thread)
 		tosave   = make(chan Thread)
@@ -150,9 +150,8 @@ func main() {
 		todlfile = make(chan File)
 		wg1, wg2 sync.WaitGroup
 
-		engine = getEngine(flag.Arg(0))
-		board  = flag.Arg(1)
-		name   = flag.Arg(2)
+		board = flag.Arg(1)
+		name  = flag.Arg(2)
 	)
 	verboseL("Using %q engine; board: /%s/\n", engine.name, board)
 
@@ -191,7 +190,7 @@ func main() {
 				for thread := range todl {
 					debugL("[tp/%05d] Processing thread %d\n", getGID(), int(thread.n))
 
-					t, err := processThread(engine, board, thread)
+					t, err := processThread(board, thread)
 					if err != nil {
 						log.Printf("Error when processing thread %d: %s\n", int(thread.n), err.Error())
 					} else if t != nil {

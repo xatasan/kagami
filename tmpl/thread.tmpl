@@ -52,33 +52,31 @@
 		    </a>
 		    {{ else if .Spoiler }}
 		    <p class="fileinfo">
-			File: <a href="../file/{{ .Filename }}">{{ shortenFile .Filename}}</a>
-			({{ byteSize .FileSize }},
-			{{ .ImageWidth -}} x {{- .ImageHeight }},
-			<a href="../file/{{ .Filename }}" download="{{ .OrigFilename }}">
-			    {{ .OrigFilename -}}
-			</a>)
+		      File: <a href="{{ getFile .Filename }}">{{ shortenFile .Filename}}</a>
+		      ({{ byteSize .FileSize }},
+		      {{ .ImageWidth -}} x {{- .ImageHeight }},
+		      <a href="{{ getFile .Filename }}" download="{{ .OrigFilename }}">
+			{{ .OrigFilename -}}
+		      </a>)
 		    </p>
-		    <a target="_blank" href="../file/{{ .Filename }}">
+		    <a target="_blank" href="{{ getFile .Filename }}">
 			<img src="../spoiler.png" />
 		    </a>
 		    {{ else }}
 		    <p class="fileinfo">
-			File: <a href="../file/{{ .Filename }}">{{ shortenFile .Filename}}</a>
+			File: <a href="{{ getFile .Filename }}">{{ shortenFile .Filename}}</a>
 			({{ byteSize .FileSize }},
 			{{ .ImageWidth -}} x {{- .ImageHeight }},
-			<a href="../file/{{ .Filename }}" download="{{ .OrigFilename }}">
+			<a href="{{ getFile .Filename }}" download="{{ .OrigFilename }}">
 			    {{ .OrigFilename -}}
 			</a>)
 		    </p>
-		    <a target="_blank" target="_blank" href="../file/{{ .Filename }}">
+		    <a target="_blank" target="_blank" href="{{ getFile .Filename }}">
 			{{ if .Thumbnail }}
-			<img src="../tmb/{{ .Thumbnail }}" width="{{ .ThumbnailWidth }}" />
+			<img src="{{ getTmb .Thumbnail }}" width="{{ .ThumbnailWidth }}" />
 			{{ else }}
 			<img src="../file.png" />
 			{{ end }}
-			
-			
 		    </a>
 		    {{ end}}
 		</aside>
