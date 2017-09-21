@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"math"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 	"path"
 	"runtime"
 	"strconv"
+	"strings"
+
+	"github.com/kennygrant/sanitize"
 )
 
 const maxFileNameLen = 24
@@ -36,6 +40,18 @@ func shortenFile(name string) string {
 	extl := len(ext) + 1 // eg.: ⋯.png
 	first := name[:maxFileNameLen-extl-1]
 	return first + "⋯" + ext
+}
+
+func shortenHTML(n int) func(template.HTML) string {
+	return func(s template.HTML) string {
+		txt := sanitize.HTML(string(s))
+		txt = strings.Replace(txt, "&gt;", ">", -1)
+		txt = strings.Replace(txt, "&lt;", "<", -1)
+		if len(txt) < n {
+			return txt
+		}
+		return txt[:(n-3)] + "..."
+	}
 }
 
 // from https://blog.sgmansfield.com/2015/12/goroutine-ids/

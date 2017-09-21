@@ -27,8 +27,9 @@ var (
 	f_queues = 12  // file download queues
 	tpp      = 200 // threads per page
 
-	verbose = false
-	debug   = false
+	rehost  bool
+	verbose bool
+	debug   bool
 )
 
 func debugL(format string, v ...interface{}) {
@@ -47,26 +48,24 @@ func init() {
 	fm := template.FuncMap{
 		"byteSize":    byteSize,
 		"shortenFile": shortenFile,
-		"genTitle": func(s template.HTML) string {
-			txt := sanitize.HTML(string(s))
-			txt = strings.Replace(txt, "&gt;", ">", -1)
-			txt = strings.Replace(txt, "&lt;", "<", -1)
-			if len(txt) < 50 {
-				return txt
-			}
-			return txt[:47] + "..."
-		},
-		"shortenStr": func(s template.HTML) string {
-			txt := sanitize.HTML(string(s))
-			txt = strings.Replace(txt, "&gt;", ">", -1)
-			txt = strings.Replace(txt, "&lt;", "<", -1)
-			if len(txt) < 200 {
-				return txt
-			}
-			return txt[:197] + "..."
-		},
+		"genTitle":    shortenHTML(50),
+		"shortenStr":  shortenHTML(200),
 		"add": func(a, b int) int {
 			return a + b
+		},
+		"getFile": func(f string) string {
+			if rehost {
+				return "../file/" + f
+			} else {
+				return engine.getFile(f)
+			}
+		},
+		"getTmb": func(f string) string {
+			if rehost {
+				return "../tmb/" + f
+			} else {
+				return engine.getTmb(f)
+			}
 		},
 	}
 	t = template.Must(template.New("").
@@ -214,10 +213,18 @@ func main() {
 		debugL("Closed \"towrite\" channel")
 	}()
 
-	debugL("Starting %d file downloading threads\n", f_queues)
-	wg1.Add(f_queues)
-	for i := 0; i < f_queues; i++ {
-		go FDLqueue(todlfile, engine, &wg1)
+	if rehost {
+		debugL("Starting %d file downloading threads\n", f_queues)
+		wg1.Add(f_queues)
+		for i := 0; i < f_queues; i++ {
+			go FDLqueue(todlfile, &wg1)
+		}
+	} else {
+		go func() {
+			for _ = range todlfile {
+				// just empty todlfile
+			}
+		}()
 	}
 
 	debugL("Starting %d file thread threads\n", w_queues)
