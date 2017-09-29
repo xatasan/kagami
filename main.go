@@ -221,7 +221,7 @@ func main() {
 		}
 	} else {
 		go func() {
-			for _ = range todlfile {
+			for range todlfile {
 				// just empty todlfile
 			}
 		}()

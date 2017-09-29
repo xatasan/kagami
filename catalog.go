@@ -71,7 +71,7 @@ func mkCatalog(name, board string) error {
 					// &p.Images
 				)
 				p.Comment = template.HTML(com)
-				p.Files = []File{File{Thumbnail: tmb}}
+				p.Files = []File{{Thumbnail: tmb}}
 				posts <- p
 			}
 			close(posts)
