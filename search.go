@@ -24,7 +24,7 @@ func init() {
                posts.country,
                posts.cname,
                posts.subject,
-               posts.comment
+               highlight(search, 0, "<strong class=search>", "</strong>")
 	FROM search
         LEFT JOIN posts ON posts.postno = search.rowid
         WHERE search MATCH ?
@@ -108,7 +108,7 @@ func search(rw http.ResponseWriter, req *http.Request) {
 		data = append(data, map[string]interface{}{
 			"postno":  postno,
 			"respto":  respto,
-			"time":    ptime,
+			"time":    ptime.Format("2006/01/_2 (Mon) 15:04:05"),
 			"name":    name,
 			"trip":    trip,
 			"id":      id,
@@ -121,6 +121,7 @@ func search(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	enc := json.NewEncoder(rw)
 	enc.SetEscapeHTML(true)
 	enc.Encode(data)

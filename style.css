@@ -146,7 +146,8 @@ ul.catalog a {
     
     body>p,
     ul.catalog,
-    div.post {
+    div.post,
+    aside#search {
 	margin: 4px 40px;
 	max-width: calc(100%-80px);
     }
@@ -200,3 +201,16 @@ div.post main pre {
 }
 
 footer > p { margin: 0; }
+
+ul#list {
+    list-style: none;
+    padding: 0;
+}
+
+strong.search {
+    color: navy;
+}
+
+form#search {
+    float: right;
+}

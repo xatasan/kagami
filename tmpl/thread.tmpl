@@ -12,12 +12,14 @@
     </head>
     <body>
 	<header>
+	    <form action="/search.html" method="get" id="search">
+		<input type="text" name="q" placeholder="Search" />
+	    </form>
 	    <h1><a href=".." >
 		{{ with .N }}{{ . }}{{ else }} Kagami for /{{ .B}}/{{ end}}
 	    </a></h1>
 	    <nav>
 		<a href="../catalog.html">Catalog</a> |
-		Search: (<a href="../sthreads.html">Threads</a>/<a href="../sfiles.html">Files</a>) |
 		<a href="../about.html">About/FAQ</a>
 	    </nav>
 	</header>

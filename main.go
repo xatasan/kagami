@@ -109,7 +109,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, fn := range []string{"style.css", "kagami.js"} {
+	for _, fn := range []string{"style.css", "kagami.js", "search.js"} {
 		from := path.Join(cwd, fn)
 		to := path.Join(r_dir, fn)
 		if _, err := os.Stat(to); err != nil && !os.IsExist(err) {
@@ -142,7 +142,6 @@ func init() {
 
 func main() {
 	if srvhost != "" {
-		log.Println(srvhost)
 		http.HandleFunc("/", search) // ie. responds to each http request
 		log.Fatal(http.ListenAndServe(srvhost, nil))
 		return // should not reach
@@ -172,7 +171,7 @@ func main() {
 		}
 	}
 
-	for _, F := range []string{"sfiles", "sthreads", "about"} {
+	for _, F := range []string{"search", "about"} {
 		f, err := os.Create("./" + F + ".html")
 		if err != nil {
 			log.Fatal(err)
