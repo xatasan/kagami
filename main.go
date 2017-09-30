@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 )
@@ -21,6 +22,8 @@ const (
 var (
 	t      *template.Template
 	engine Engine
+
+	srvhost string
 
 	w_queues = 512 // writing queues
 	d_queues = 64  // thread download queues
@@ -73,7 +76,8 @@ func init() {
 		ParseGlob("./tmpl/*.tmpl"))
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s [options] [siteurl] [board] [name]?\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage:\t\t%s [options] [siteurl] [board] [name]?\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "search server:\t%s -s \":80\"\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
@@ -84,6 +88,7 @@ func init() {
 	flag.IntVar(&tpp, "t", tpp, "threads per catalog page")
 	flag.StringVar(&database, "db", "kagami.db", "use file as sqlite database")
 	flag.StringVar(&r_dir, "o", "out", "output directory")
+	flag.StringVar(&srvhost, "s", "", "host search server on specified argument")
 	flag.BoolVar(&verbose, "v", false, "output verbosely")
 	flag.BoolVar(&debug, "d", false, "output for debugging")
 	flag.BoolVar(&rehost, "r", false, "download and rehost files and thumbnails")
@@ -136,6 +141,13 @@ func init() {
 }
 
 func main() {
+	if srvhost != "" {
+		log.Println(srvhost)
+		http.HandleFunc("/", search) // ie. responds to each http request
+		log.Fatal(http.ListenAndServe(srvhost, nil))
+		return // should not reach
+	}
+
 	if flag.NArg() < 2 {
 		flag.Usage()
 		os.Exit(1)
