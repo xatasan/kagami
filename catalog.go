@@ -14,7 +14,14 @@ func mkCatalog(name, board string) error {
 	var (
 		page = "./catalog-%d.html"
 		opc  int // OP count
+		sort string
 	)
+
+	if sticky {
+		sort = "posts.sticky DESC, posts.time DESC"
+	} else {
+		sort = "posts.time DESC"
+	}
 
 	db.QueryRow(`SELECT count(1) FROM posts WHERE op;`).Scan(&opc)
 	pages := int(math.Ceil(float64(opc) / float64(tpp)))
@@ -30,7 +37,7 @@ func mkCatalog(name, board string) error {
                                    LIMIT 1)))
         FROM posts
         WHERE posts.op
-        ORDER BY posts.sticky DESC, posts.time DESC
+        ORDER BY ` + sort + `
         LIMIT ? OFFSET ?`)
 	if err != nil {
 		return err

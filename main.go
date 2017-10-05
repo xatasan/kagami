@@ -33,6 +33,7 @@ var (
 	rehost  bool
 	verbose bool
 	debug   bool
+	sticky  bool
 )
 
 func debugL(format string, v ...interface{}) {
@@ -92,6 +93,7 @@ func init() {
 	flag.BoolVar(&verbose, "v", false, "output verbosely")
 	flag.BoolVar(&debug, "d", false, "output for debugging")
 	flag.BoolVar(&rehost, "r", false, "download and rehost files and thumbnails")
+	flag.BoolVar(&sticky, "st", false, "place sticky threads at the front of the catalog")
 	flag.Parse()
 
 	for _, d := range []string{
