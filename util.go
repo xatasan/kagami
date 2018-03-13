@@ -84,3 +84,10 @@ func dl(local, remote string) error {
 	}
 	return nil
 }
+
+func Verbose(v bool) {
+	log.SetFlags(0)
+	if !v {
+		log.SetOutput(ioutils.Discard)
+	}
+}
