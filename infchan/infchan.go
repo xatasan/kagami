@@ -9,6 +9,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	k "github.com/xatasan/kagami/types"
@@ -44,14 +45,25 @@ func (b board) Name() string {
 	return b.name
 }
 
-func (b board) Threads(ch chan<- *k.Thread) error {
+func (b board) Threads(ch chan<- *k.Thread) (*sync.WaitGroup, error) {
 	threads, err := vichan.ThreadList(host, b.name)
+	if err != nil {
+		return nil, err
+	}
+	var wg *sync.WaitGroup
+	wg.Add(len(threads))
 	for _, threadId := range threads {
 		go func(n string) {
-			ch <- b.Thread(n)
+			t, err := b.Thread(n)
+			if err != nil {
+				log.Print("Error when fetching threads: ", err.Error())
+			} else {
+				ch <- t
+			}
+			wg.Done()
 		}(threadId)
 	}
-	return err
+	return &wg, nil
 }
 
 func (b board) Thread(name string) (*k.Thread, error) {
