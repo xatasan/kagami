@@ -24,11 +24,10 @@ const (
 	static  = "https://%s/static/%s"
 )
 
-var linkRegexp *regexp.Regexp
-
-func init() {
-	linkRegexp = regexp.MustCompile(`<a onclick="highlightReply\('(\d+)'(?:, event)?\);"\s+href="/(\w+)/res/(\d+).html#\d+">`)
-}
+var (
+	LinkReg   = regexp.MustCompile(`<a onclick="highlightReply\('(\d+)'(?:, event)?\);"\s+href="/(\w+)/res/(\d+).html#\d+">`)
+	ThreadReg = regexp.MustCompile(`/([[:alpha:]]*)(?:/res/([[:alpha:]]*).html|catalog.html|/)?`)
+)
 
 type engine struct{ host string }
 
@@ -42,6 +41,24 @@ func (e engine) Host() string {
 
 func (e engine) Board(b string) (k.Board, error) {
 	return board{e.host, b}, nil
+}
+
+func (e engine) ReadUrl(u *url.URL) (k.Board, k.Thread, error) {
+	if u.Host != e.host {
+		return nil, nil,
+			fmt.Errorf("URL contains wrong host")
+	}
+
+	match := ThreadReg.FindStringSubmatch(u.Path)
+	if len(match) == 4 {
+		brd, _ := e.Board(match[1])
+		thr, err := brd.Thread(match[2])
+		return brd, thr, err
+	} else if len(match) >= 2 {
+		brd, _ := e.Board(match[1])
+		return brd, nil, nil
+	} // else
+	return nil, nil, fmt.Errorf("invalid URL path")
 }
 
 type board struct{ host, name string }
@@ -144,7 +161,7 @@ func (b board) Thread(name string) (k.Thread, error) {
 			})
 		}
 
-		com := linkRegexp.ReplaceAllString(post.Com,
+		com := LinkReg.ReplaceAllString(post.Com,
 			`<a class="r" href="./res/$3.html#$1">`)
 
 		var p *k.Post

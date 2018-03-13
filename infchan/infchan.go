@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"image"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -17,15 +18,15 @@ import (
 )
 
 const (
-	host     = "http://8ch.net"
-	asset    = "https://8ch.net/static/assets/%s/%s"
-	file     = "https://media.8ch.net/file_store/"
-	file_png = "https://8ch.net/static/file.png"
-	thumb    = "https://media.8ch.net/file_store/thumb/%s"
-	thread   = "https://8ch.net/%s/res/%s.json"
+	host    = "8ch.net"
+	asset   = "https://8ch.net/static/assets/%s/%s"
+	file    = "https://media.8ch.net/file_store/"
+	filePng = "https://8ch.net/static/file.png"
+	thumb   = "https://media.8ch.net/file_store/thumb/%s"
+	thread  = "https://8ch.net/%s/res/%s.json"
 )
 
-type engine interface{}
+type engine struct{}
 
 func (e engine) Name() string {
 	return "8chan"
@@ -35,8 +36,26 @@ func (e engine) Host() string {
 	return host
 }
 
-func (e engine) Board(board string) (*k.Board, error) {
-	return board{board: board}, nil
+func (e engine) Board(brd string) (k.Board, error) {
+	return board{brd}, nil
+}
+
+func (e engine) ReadUrl(u *url.URL) (k.Board, k.Thread, error) {
+	if u.Host != "8ch.net" {
+		return nil, nil,
+			fmt.Errorf("URL contains wrong host")
+	}
+
+	match := vichan.ThreadReg.FindStringSubmatch(u.Path)
+	if len(match) == 4 {
+		brd, _ := e.Board(match[1])
+		thr, err := brd.Thread(match[2])
+		return brd, thr, err
+	} else if len(match) >= 2 {
+		brd, _ := e.Board(match[1])
+		return brd, nil, nil
+	} // else
+	return nil, nil, fmt.Errorf("invalid URL path")
 }
 
 type board struct{ name string }
@@ -45,12 +64,12 @@ func (b board) Name() string {
 	return b.name
 }
 
-func (b board) Threads(ch chan<- *k.Thread) (*sync.WaitGroup, error) {
+func (b board) Threads(ch chan<- k.Thread) (*sync.WaitGroup, error) {
 	threads, err := vichan.ThreadList(host, b.name)
 	if err != nil {
 		return nil, err
 	}
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	wg.Add(len(threads))
 	for _, threadId := range threads {
 		go func(n string) {
@@ -66,7 +85,7 @@ func (b board) Threads(ch chan<- *k.Thread) (*sync.WaitGroup, error) {
 	return &wg, nil
 }
 
-func (b board) Thread(name string) (*k.Thread, error) {
+func (b board) Thread(name string) (k.Thread, error) {
 	type efile struct {
 		Tim         string  `json:"tim"`
 		Filename    string  `json:"filename"`
@@ -111,11 +130,13 @@ func (b board) Thread(name string) (*k.Thread, error) {
 		ExtraFiles  []efile `json:"extra_files"`
 	}
 
-	// request /res/%d.json
-	req := fmt.Sprintf(thread, board, no)
+	req := fmt.Sprintf(thread, b.name, name)
 	resp, err := http.Get(req)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("Problematic status: %s", resp.Status)
 	}
 
 	// decode JSON structure from /res/%d.json
@@ -126,101 +147,102 @@ func (b board) Thread(name string) (*k.Thread, error) {
 		return nil, err
 	}
 
-	qbi := make(map[int][]int) // quotes by ids
-	var thread Thread
-	first := true
+	var (
+		T       k.Thread
+		postMap = make(map[int]*k.Post)
+		flagMap = make(map[string]*k.Flag)
+		first   = true
+	)
+
 	for _, post := range data["posts"] {
-		var files []File
+		var files []*k.File
 		if post.Filename != "" {
-			files = append(files, File{
-				Filename:        post.Tim + post.Ext,
-				OrigFilename:    post.Filename + post.Ext,
-				FileSize:        int(post.Fsize),
-				FileMD5:         post.Md5,
-				ImageWidth:      int(post.Width),
-				ImageHeight:     int(post.Height),
-				Thumbnail:       genThumbnail(post.Tim + post.Ext),
-				ThumbnailWidth:  int(post.TmbWidth),
-				ThumbnailHeight: int(post.TmbHeight),
-				FileDeleted:     post.FileDeleted != 0 || post.Ext == "deleted",
-				Spoiler:         post.Spoiler != 0,
+			files = append(files, &k.File{
+				Filename:     post.Tim + post.Ext,
+				OrigFilename: post.Filename + post.Ext,
+				FileSize:     int(post.Fsize),
+				FileMD5:      post.Md5,
+				Image: image.Point{
+					int(post.Width),
+					int(post.Height),
+				},
+				ThumbnailName: genThumbnail(post.Tim + post.Ext),
+				Thumbnail: image.Point{
+					int(post.TmbWidth),
+					int(post.TmbHeight),
+				},
+				FileDeleted: post.FileDeleted != 0 || post.Ext == "deleted",
+				Spoiler:     post.Spoiler != 0,
 			})
 		}
 		for _, file := range post.ExtraFiles {
-			files = append(files, File{
-				Filename:        file.Tim + file.Ext,
-				OrigFilename:    file.Filename + file.Ext,
-				FileSize:        int(file.Fsize),
-				FileMD5:         file.Md5,
-				ImageWidth:      int(file.Width),
-				ImageHeight:     int(file.Height),
-				Thumbnail:       genThumbnail(file.Tim + file.Ext),
-				ThumbnailWidth:  int(file.TmbWidth),
-				ThumbnailHeight: int(file.TmbHeight),
-				FileDeleted:     file.FileDeleted != 0 || post.Ext == "deleted",
-				Spoiler:         file.Spoiler != 0,
+			files = append(files, &k.File{
+				Filename:     file.Tim + file.Ext,
+				OrigFilename: file.Filename + file.Ext,
+				FileSize:     int(file.Fsize),
+				FileMD5:      file.Md5,
+				Image: image.Point{
+					int(file.Width),
+					int(file.Height),
+				},
+				ThumbnailName: genThumbnail(file.Tim + file.Ext),
+				Thumbnail: image.Point{
+					int(file.Width),
+					int(file.Height),
+				},
+				FileDeleted: file.FileDeleted != 0 || post.Ext == "deleted",
+				Spoiler:     file.Spoiler != 0,
 			})
 		}
 
-		id := int(post.No)
-		quotes := vichan_link_re.FindAllStringSubmatch(post.Com, -1)
-		for _, q := range quotes {
-			qid, err := strconv.Atoi(q[1]) // get quoted id
-			if err != nil {
-				return nil, err
-			}
-			qbi[qid] = append(qbi[qid], id)
+		//quotes := vichan.LinkReg.FindAllStringSubmatch(post.Com, -1)
+		com := vichan.LinkReg.ReplaceAllString(post.Com,
+			`<a class="r" href="./$3.html#$1">`)
+
+		p := &k.Post{
+			PostNumber: int(post.No),
+			Sticky:     post.Sticky != 0,
+			Closed:     post.Sticky != 0,
+			OP:         first,
+			Time:       time.Unix(int64(post.Time), 0),
+			Name:       post.Name,
+			Tripcode:   post.Trip,
+			Id:         post.Id,
+			Capcode:    post.Capcode,
+			Subject:    post.Sub,
+			Comment:    template.HTML(com),
+			Files:      files,
 		}
 
-		com := vichan_link_re.ReplaceAllString(post.Com,
-			`<a class="r" href="./$3.html#$1">`)
-		thread = append(thread, Post{
-			PostNumber:  id,
-			ReplyTo:     int(post.Resto),
-			Sticky:      post.Sticky != 0,
-			Closed:      post.Closed != 0,
-			OP:          first,
-			Time:        time.Unix(int64(post.Time), 0),
-			Name:        post.Name,
-			Tripcode:    post.Trip,
-			Id:          post.Id,
-			Capcode:     post.Capcode,
-			Country:     post.Country,
-			CountryName: post.CountryName,
-			Subject:     post.Sub,
-			Comment:     template.HTML(com),
-			Files:       files,
-			Images:      int(post.Images),
-		})
+		postMap[p.PostNumber] = p
+		pmap, ok := postMap[int(post.Resto)]
+		p.ReplyTo = pmap
+		if ok {
+			p.ReplyTo.QuotedBy = append(p.ReplyTo.QuotedBy, p)
+		}
+
+		if flag, ok := flagMap[post.CountryName]; ok {
+			p.Flag = flag
+		} else {
+			p.Flag = &k.Flag{post.Country, post.CountryName}
+			flagMap[post.CountryName] = p.Flag
+		}
+
+		T = append(T, p)
 		first = false
 	}
 
-	for i, t := range thread {
-		thread[i].Quoted = qbi[t.PostNumber]
-	}
-
-	return thread, nil
+	return T, nil
 }
 
-func (_ board) GetFileUri(f File) *url.URL {
+func (_ board) GetFileUri(f *k.File) *url.URL {
 	path := file
 	path += f.Filename
 	u, _ := url.Parse(path)
 	return u
 }
 
-func (_ board) genThumbnail(file string) string {
-	ext := path.Ext(file)
-	switch ext {
-	case ".jpeg", ".jpg", ".png", ".gif":
-		return file
-	case ".mp4", ".webm":
-		return strings.TrimSuffix(file, ext) + ".jpg"
-	}
-	return ""
-}
-
-func (_ board) GetTmbUri(f File) *url.URL {
+func (b board) GetTmbUri(f *k.File) *url.URL {
 	switch path.Ext(f.Filename) {
 	case ".jpeg", ".jpg", ".png", ".gif", ".mp4", ".webm":
 		tmb := genThumbnail(f.Filename)
@@ -233,17 +255,28 @@ func (_ board) GetTmbUri(f File) *url.URL {
 	return nil //"https://8ch.net/static/file.png"
 }
 
-func (_ board) GetStaticUri(f File) *url.URL {
+func (b board) GetStaticUri(f *k.File) *url.URL {
 	var path string
 	if f.OrigFilename == "file.png" {
-		path = file_png
+		path = filePng
 	} else {
-		path = fmt.Sprintf(asset, board, file)
+		path = fmt.Sprintf(asset, b.name, file)
 	}
 	u, _ := url.Parse(path)
 	return u
 }
 
-func Engine(host string) Engine {
-	return board{host: host}
+func Engine() k.Engine {
+	return engine{}
+}
+
+func genThumbnail(file string) string {
+	ext := path.Ext(file)
+	switch ext {
+	case ".jpeg", ".jpg", ".png", ".gif":
+		return file
+	case ".mp4", ".webm":
+		return strings.TrimSuffix(file, ext) + ".jpg"
+	}
+	return ""
 }
