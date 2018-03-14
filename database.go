@@ -1,152 +1,129 @@
-package main
+package kagami
 
 import (
-	"time"
+	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"database/sql"
+	k "github.com/xatasan/kagami/types"
 )
 
 var (
-	db         *sql.DB
+	db *sql.DB
+
 	insertThr  *sql.Stmt
 	insertFile *sql.Stmt
 	insertLink *sql.Stmt
+	postSearch *sql.Stmt
+
+	toSave = make(chan<- k.Thread)
 )
 
-func setupdb(dbfile string) (err error) {
-	db, err = sql.Open("sqlite3", "file:"+dbfile+"?cache=shared&mode=rwc")
+func SetupDatabase(dbfile string) (err error) {
+	conn := "file:" + dbfile + "?cache=shared&mode=rwc"
+	db, err = sql.Open("sqlite3", conn)
 	if err != nil {
 		return
 	}
 
-	// files
-	if _, err = db.Exec(`
-        CREATE TABLE IF NOT EXISTS files (
-            id INTEGER PRIMARY KEY ON CONFLICT IGNORE AUTOINCREMENT,
-            filename TEXT,
-            ofilename TEXT,
-            filesize INTEGER, md5 TEXT,
-            width INTEGER, height INTEGER,
-            tfilename TEXT,
-            twidth INTEGER, theight INTEGER,
-            deleted INTEGER, spoiler INTEGER
-        )`); err != nil {
-		return
+	for _, exec := range []string{
+		"x_setup.sql",
+		"c_files.sql",
+		"c_posts.sql",
+		"c_links.sql",
+		// "c_search.sql",
+	} {
+		_, err = db.Exec(string(MustAsset(exec)))
+		if err != nil {
+			return
+		}
 	}
 
-	if insertFile, err = db.Prepare(`
-        INSERT INTO files (filename, ofilename, filesize, md5, width, height, tfilename, twidth, theight, deleted, spoiler)
-                   VALUES (?,         ?,         ?,        ?,   ?,     ?,      ?,         ?,      ?,       ?,       ?)
-        `); err != nil {
-		return
+	for stmt, vp := range map[string]**sql.Stmt{
+		"i_files.sql": &insertFile,
+		"i_link.sql":  &insertLink,
+		"i_posts.sql": &insertThr,
+		// "s_search.sql": &postSearch,
+	} {
+		*vp, err = db.Prepare(string(MustAsset(stmt)))
+		if err != nil {
+			return
+		}
 	}
 
-	// posts
-	if _, err = db.Exec(`
-        CREATE TABLE IF NOT EXISTS posts (
-            postno INTEGER PRIMARY KEY ON CONFLICT IGNORE,
-            replyto INTEGER ,
-            sticky INTEGER, closed INTEGER, op INTEGER,
-            time DATETIME, name TEXT, tripcode TEXT,
-            id TEXT, capcode TEXT, country TEXT, cname TEXT,
-            subject TEXT, comment TEXT,
-            FOREIGN KEY (replyto) REFERENCES posts(postno) ON DELETE CASCADE
-        )`); err != nil {
-		return
-	}
-
-	insertThr, err = db.Prepare(`
-        INSERT INTO posts (postno, replyto, sticky, closed, op, time, name, tripcode, id, capcode, country, cname, subject, comment)
-                   VALUES (?,      ?,       ?,      ?,      ?,  ?,    ?,    ?,        ?,  ?,       ?,       ?,     ?,       ?)
-        `)
-
-	// links (between files and posts) - WARNING: hacked together
-	// `ord` = order
-	if _, err = db.Exec(`
-        CREATE TABLE IF NOT EXISTS links (
-            post INTEGER, file INTEGER, ord INTEGER,
-            PRIMARY KEY (post, file),
-            FOREIGN KEY (post) REFERENCES posts(postno) ON DELETE CASCADE,
-            FOREIGN KEY (file) REFERENCES files(id) ON DELETE CASCADE
-        )`); err != nil {
-		return
-	}
-
-	insertLink, err = db.Prepare(`
-        INSERT INTO links (post, file, ord) VALUES (?, ?, ?)
-        `)
-
-	// full-text search
-	if _, err = db.Exec(`
-        CREATE VIRTUAL TABLE IF NOT EXISTS search
-        USING fts5(
-            content=posts,
-            content_rowid=postno,
-            comment,
-            subject
-        );
-        CREATE TRIGGER IF NOT EXISTS post_ai AFTER INSERT ON posts BEGIN
-            INSERT INTO search(rowid, comment, subject)
-                   VALUES (new.postno, new.comment, new.subject);
-        END;
-        CREATE TRIGGER IF NOT EXISTS tbl_ad AFTER DELETE ON posts BEGIN
-            INSERT INTO search(search, rowid, comment, subject)
-                   VALUES('delete', old.postno, old.comment, old.subject);
-        END;
-        CREATE TRIGGER IF NOT EXISTS tbl_au AFTER UPDATE ON posts BEGIN
-            INSERT INTO search(search, rowid, comment, subject)
-                   VALUES('delete', old.postno, old.comment, old.subject);
-            INSERT INTO search(rowid, comment, subject)
-                   VALUES (new.postno, new.comment, new.subject);
-        END;`); err != nil {
-		return
-	}
-
-	return
+	return nil
 }
 
-func write2db(save <-chan Thread) error {
-	tx, err := db.Begin()
+func saveBoard(brd k.Board) error {
+	threads := make(chan k.Thread)
+	wg, err := brd.Threads(threads)
 	if err != nil {
 		return err
 	}
-	var t, f int
-	start := time.Now()
-	for T := range save {
-		for _, P := range T {
-			if _, err := tx.Stmt(insertThr).Exec(P.PostNumber,
-				P.ReplyTo, P.Sticky, P.Closed, P.OP, P.Time,
-				P.Name, P.Tripcode, P.Id, P.Capcode, P.Country,
-				P.CountryName, P.Subject, string(P.Comment)); err != nil {
-				return err
-			}
-			for i, F := range P.Files {
-				res, err := tx.Stmt(insertFile).Exec(F.Filename,
-					F.OrigFilename, F.FileSize, F.FileMD5,
-					F.ImageWidth, F.ImageHeight, F.Thumbnail,
-					F.ThumbnailWidth, F.ThumbnailHeight,
-					F.FileDeleted, F.Spoiler)
-				if err != nil {
-					return err
-				}
+	go func() {
+		wg.Wait()
+		close(threads)
+	}()
+	return save(threads)
+}
 
-				id, err := res.LastInsertId()
-				if err != nil {
-					return err
-				}
+func saveThread(thr k.Thread) error {
+	threads := make(chan k.Thread)
+	threads <- thr
+	close(threads)
+	return save(threads)
+}
 
-				if _, err := tx.Stmt(insertLink).Exec(P.PostNumber, id, i); err != nil {
-					return err
-				}
-				f++
+func save(save <-chan k.Thread) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	for thread := range save {
+		for _, post := range thread {
+			err = preparePost(post, tx)
+			if err != nil {
+				return
 			}
-			t++
+		}
+	}
+	return tx.Commit()
+}
+
+func preparePost(p *k.Post, tx *sql.Tx) error {
+	var resp int
+	if p.ReplyTo != nil {
+		resp = p.ReplyTo.PostNumber
+	}
+	_, err := tx.Stmt(insertThr).Exec(
+		p.PostNumber, resp, p.Sticky, p.Closed,
+		p.OP, p.Time, p.Name, p.Tripcode, p.Id,
+		p.Capcode, p.Flag.Icon, p.Flag.Name,
+		p.Subject, string(p.Comment))
+	if err != nil {
+		return err
+	}
+
+	for order, f := range p.Files {
+		res, err := tx.Stmt(insertFile).Exec(
+			f.Filename, f.OrigFilename, f.FileSize,
+			f.FileMD5, f.Image.X, f.Image.Y,
+			f.ThumbnailName, f.Thumbnail.X,
+			f.Thumbnail.Y, f.FileDeleted, f.Spoiler)
+		if err != nil {
+			return err
 		}
 
+		id, err := res.LastInsertId()
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Stmt(insertLink).Exec(
+			p.PostNumber, id, order)
+		if err != nil {
+			return err
+		}
 	}
-	tx.Commit()
-	verboseL("Inserted %d posts and %d files into the database in %v", t, f, time.Since(start))
 	return nil
 }

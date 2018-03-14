@@ -1,7 +1,7 @@
 -- -*- mode: sql; sql-product: sqlite -*-
 
 CREATE VIRTUAL TABLE IF NOT EXISTS search
-USING fts5(
+USING FTS5(
 	  content=posts,
       content_rowid=postno,
       comment,

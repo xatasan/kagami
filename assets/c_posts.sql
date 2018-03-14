@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS posts (
 	   postno INTEGER PRIMARY KEY ON CONFLICT IGNORE,
-       replyto INTEGER ,
+       replyto INTEGER,
        sticky INTEGER,
 	   closed INTEGER,
 	   op INTEGER,
