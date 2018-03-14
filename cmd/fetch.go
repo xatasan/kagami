@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"net/url"
 	"os"
 
@@ -9,20 +9,26 @@ import (
 )
 
 func fetch(args []string) {
+	var err error
 	switch len(args) {
 	case 1:
-		u, err := url.Parse(args[0])
+		var u *url.URL
+		u, err = url.Parse(args[0])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: malformed URL (%s)", os.Args[0], err.String())
-			os.Exit(1)
+			err = fmt.Errorf("%s: malformed URL (%v)", os.Args[0], err)
+		} else {
+			err = kagami.FetchUrl(engine, u)
 		}
-		kagami.FetchUrl(engine, u, mirror)
 	case 2:
-		kagami.FetchBoard(args[0], args[1], mirror)
+		err = kagami.FetchBoard(args[0], args[1])
 	case 3:
-		kagami.FetchThread(args[0], args[1], args[2], mirror)
+		err = kagami.FetchThread(args[0], args[1], args[2])
 	default:
 		help()
+		os.Exit(1)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 }
